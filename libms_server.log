@@ -1,0 +1,33 @@
+
+  +=============================================+
+  |     Library Management System v3.0          |
+  |     Python + Flask + Bootstrap 5            |
+  +=============================================+
+
+  [NET] Starting web server at http://0.0.0.0:5000...
+  [LOCK] Login: ADMIN001 / admin123
+  [HINT] Press Ctrl+K to search books anywhere
+
+  [WAIT] Waiting for server on port 5000...  📚 Library Management System — Web Interface
+  🌐 http://0.0.0.0:5000
+  🔐 Default login: ADMIN001 / admin123
+  ⌨️  Press Ctrl+K to search books from anywhere
+ * Serving Flask app 'web_app'
+ * Debug mode: on
+ READY!
+  [WEB] Opening browser at http://localhost:5000
+
+  --------------------------------------------
+  [OK] Library Management System is running!
+     Web: running
+
+  [WEB] http://localhost:5000
+  [AUTH] Login: ADMIN001 / admin123
+  [HINT] Shortcut: Ctrl+K to search books
+
+  Press any key to stop the server, or Ctrl+C to quit.
+  --------------------------------------------
+
+  [STOP] Shutting down...
+     Web: stopped
+  [OK] All services stopped. Goodbye! [OK]

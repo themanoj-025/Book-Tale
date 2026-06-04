@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#4f46e5">
+<meta name="description" content="BookTale - Your next great read is one shelf away. Discover, track, and share your reading journey.">
+<title>BookTale — Your Reading Companion</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#4f46e5;--primary-dark:#4338ca;--primary-light:#eef2ff;--primary-glow:rgba(79,70,229,.25);--bg:#f8fafc;--bg-card:#fff;--text:#0f172a;--text-muted:#536471;--text-dim:#94a3b8;--border:#eff3f4;--success:#10b981;--warning:#f59e0b;--danger:#ef4444;--info:#3b82f6;--radius:16px;--radius-sm:10px;--font:'Poppins','Inter','Segoe UI',system-ui,-apple-system,sans-serif;--ease:cubic-bezier(.4,0,.2,1);--ease-spring:cubic-bezier(.34,1.56,.64,1)}
+[data-theme="dark"]{--bg:#000;--bg-card:#16181c;--text:#e7e9ea;--text-muted:#71767b;--text-dim:#536471;--border:#2f3336;--primary-light:#1d1f23;--primary-glow:rgba(79,70,229,.15)}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;overflow-x:hidden}
+::selection{background:var(--primary);color:white}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px;box-shadow:0 0 0 4px var(--primary-glow)}
+/* ── Nav ── */
+.top-nav{position:sticky;top:0;z-index:1000;background:rgba(255,255,255,.8);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+[data-theme="dark"] .top-nav{background:rgba(0,0,0,.8)}
+.top-nav .nav-inner{display:flex;align-items:center;justify-content:space-between;max-width:1200px;margin:0 auto;padding:.6rem 1.5rem}
+.top-nav .logo{font-size:1.3rem;font-weight:800;color:var(--primary);text-decoration:none;display:flex;align-items:center;gap:8px}
+.top-nav .logo i{font-size:1.5rem}
+.top-nav .nav-links{display:flex;align-items:center;gap:8px}
+.top-nav .nav-links a{padding:.4rem 1rem;border-radius:9999px;font-size:.85rem;font-weight:500;color:var(--text);text-decoration:none;transition:all .2s}
+.top-nav .nav-links a:hover{background:var(--primary-light);color:var(--primary)}
+.top-nav .nav-links .btn-primary-custom{background:var(--primary);color:white!important}
+.top-nav .nav-links .btn-primary-custom:hover{background:var(--primary-dark)}
+/* ── Hero ── */
+.hero{min-height:85vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f0f1a 0%,#1a1a3e 40%,#2d1b4e 100%);position:relative;overflow:hidden;padding:4rem 1.5rem}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(79,70,229,.3) 0%,transparent 60%),radial-gradient(ellipse at 80% 50%,rgba(168,85,247,.2) 0%,transparent 60%);pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:150px;background:linear-gradient(0deg,var(--bg),transparent);pointer-events:none}
+.hero .floating-books{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.hero .floating-books .fb{position:absolute;width:40px;height:60px;border-radius:4px;opacity:.1;animation:floatBook 20s infinite linear}
+.hero .floating-books .fb:nth-child(1){left:10%;top:20%;width:30px;height:45px;background:#4f46e5;animation-delay:0s}
+.hero .floating-books .fb:nth-child(2){left:85%;top:30%;width:50px;height:75px;background:#7c3aed;animation-delay:-5s}
+.hero .floating-books .fb:nth-child(3){left:20%;top:70%;width:35px;height:52px;background:#059669;animation-delay:-10s}
+.hero .floating-books .fb:nth-child(4){left:75%;top:75%;width:45px;height:67px;background:#d97706;animation-delay:-15s}
+.hero .floating-books .fb:nth-child(5){left:50%;top:15%;width:25px;height:38px;background:#dc2626;animation-delay:-7s}
+@keyframes floatBook{0%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-30px) rotate(5deg)}100%{transform:translateY(0) rotate(0deg)}}
+.hero-content{position:relative;z-index:1;text-align:center;max-width:720px}
+.hero-content .hero-badge{display:inline-block;background:rgba(79,70,229,.15);color:#818cf8;padding:.3rem 1rem;border-radius:9999px;font-size:.8rem;font-weight:600;margin-bottom:1.5rem;border:1px solid rgba(79,70,229,.2)}
+.hero-content h1{font-size:clamp(2rem,5vw,3.5rem);font-weight:800;color:white;line-height:1.15;margin-bottom:1rem}
+.hero-content h1 .highlight{background:linear-gradient(135deg,#818cf8,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-content .typewriter{font-size:1.1rem;color:rgba(255,255,255,.6);min-height:1.5em;margin-bottom:2rem;font-weight:300}
+.hero-content .typewriter .cursor{display:inline-block;width:2px;height:1.1em;background:#818cf8;margin-left:2px;animation:blink 1s step-end infinite;vertical-align:text-bottom}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.hero-content .cta-group{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.hero-content .cta-group .btn{display:inline-flex;align-items:center;gap:8px;padding:.75rem 2rem;border-radius:9999px;font-size:1rem;font-weight:700;text-decoration:none;transition:all .3s var(--ease-spring);border:none;cursor:pointer}
+.hero-content .cta-group .btn-primary-custom{background:var(--primary);color:white}
+.hero-content .cta-group .btn-primary-custom:hover{background:var(--primary-dark);transform:translateY(-2px);box-shadow:0 8px 24px var(--primary-glow)}
+.hero-content .cta-group .btn-outline-light{background:transparent;color:white;border:2px solid rgba(255,255,255,.2)}
+.hero-content .cta-group .btn-outline-light:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.4);transform:translateY(-2px)}
+.hero-content .live-stats{display:flex;gap:2rem;justify-content:center;margin-top:2.5rem;flex-wrap:wrap}
+.hero-content .live-stats .ls-item{text-align:center}
+.hero-content .live-stats .ls-item .ls-num{font-size:1.8rem;font-weight:800;color:white}
+.hero-content .live-stats .ls-item .ls-label{font-size:.75rem;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px}
+/* ── Sections ── */
+.section{padding:4rem 1.5rem;max-width:1100px;margin:0 auto}
+.section-header{text-align:center;margin-bottom:2.5rem}
+.section-header h2{font-size:2rem;font-weight:800;margin-bottom:.5rem}
+.section-header p{color:var(--text-muted);font-size:1rem;max-width:500px;margin:0 auto}
+/* ── Featured Books Carousel ── */
+.featured-carousel{position:relative}
+.featured-carousel .carousel-inner{overflow:visible;padding:1rem 0}
+.featured-carousel .carousel-item{transition:transform .5s var(--ease-spring)}
+.featured-book .book-card-3d{transition:transform .4s var(--ease);margin:0 auto;max-width:200px}
+.featured-book .book-card-3d:hover{transform:rotateY(0deg) scale(1.05)!important}
+/* ── Feature Cards ── */
+.feature-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:2rem 1.5rem;text-align:center;height:100%;transition:all .3s var(--ease);box-shadow:0 4px 24px rgba(0,0,0,.04)}
+.feature-card:hover{transform:translateY(-6px);box-shadow:0 12px 40px rgba(0,0,0,.08);border-color:rgba(79,70,229,.2)}
+.feature-card .feature-icon{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:white;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin:0 auto 1rem;transition:all .3s}
+.feature-card:hover .feature-icon{transform:scale(1.1);box-shadow:0 8px 24px var(--primary-glow)}
+.feature-card h3{font-size:1rem;font-weight:700;margin-bottom:.5rem}
+.feature-card p{font-size:.85rem;color:var(--text-muted);line-height:1.5;margin:0}
+/* ── Testimonials ── */
+.testimonial-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;height:100%;transition:all .3s}
+.testimonial-card:hover{box-shadow:0 8px 32px rgba(0,0,0,.06)}
+.testimonial-card .stars{color:#f59e0b;font-size:1rem;margin-bottom:.8rem}
+.testimonial-card p{font-size:.85rem;color:var(--text-muted);line-height:1.6;font-style:italic;margin-bottom:.8rem}
+.testimonial-card .author{font-size:.8rem;font-weight:600;color:var(--text)}
+.testimonial-card .author span{color:var(--primary);font-weight:500}
+/* ── Social Proof Section ── */
+.social-proof{background:linear-gradient(135deg,var(--primary-light),rgba(168,85,247,.05));border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+/* ── CTA Section ── */
+.cta-section{background:linear-gradient(135deg,#0f0f1a,#2d1b4e);padding:4rem 1.5rem;text-align:center;color:white}
+.cta-section h2{font-size:2rem;font-weight:800;margin-bottom:.5rem}
+.cta-section p{color:rgba(255,255,255,.6);max-width:500px;margin:0 auto 1.5rem}
+.cta-section .btn{display:inline-flex;align-items:center;gap:8px;padding:.75rem 2rem;border-radius:9999px;font-size:1rem;font-weight:700;text-decoration:none;transition:all .3s var(--ease-spring);border:none;cursor:pointer}
+.cta-section .btn-primary-custom{background:var(--primary);color:white}
+.cta-section .btn-primary-custom:hover{background:var(--primary-dark);transform:translateY(-2px);box-shadow:0 8px 24px var(--primary-glow)}
+/* ── Footer ── */
+.footer{background:#0f0f1a;color:rgba(255,255,255,.5);padding:3rem 1.5rem 1.5rem}
+.footer .footer-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:2rem}
+.footer h4{color:white;font-size:.9rem;font-weight:700;margin-bottom:1rem}
+.footer p{font-size:.8rem;line-height:1.5}
+.footer a{color:rgba(255,255,255,.5);text-decoration:none;display:block;font-size:.8rem;margin-bottom:.4rem;transition:color .2s}
+.footer a:hover{color:white}
+.footer .copyright{text-align:center;padding-top:2rem;margin-top:2rem;border-top:1px solid rgba(255,255,255,.08);font-size:.75rem}
+@media(max-width:768px){.hero{min-height:60vh;padding:3rem 1rem}.top-nav .nav-links a{font-size:.8rem;padding:.3rem .7rem}.features-grid .col-md-4,.testimonials-grid .col-md-4{width:100%}.footer .footer-inner{grid-template-columns:1fr 1fr;gap:1.5rem}}
+@media(max-width:480px){.hero-content h1{font-size:1.8rem}.hero-content .cta-group{flex-direction:column;align-items:center}.hero-content .cta-group .btn{width:100%;justify-content:center}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;transition-duration:0.01ms!important}}
+</style>
+</head>
+<body>
+<!-- Top Nav -->
+<nav class="top-nav" role="navigation" aria-label="Site navigation">
+  <div class="nav-inner">
+    <a href="/landing" class="logo"><i class="bi bi-book-fill"></i> BookTale</a>
+    <div class="nav-links">
+      <a href="/landing">Home</a>
+      <a href="/features">Features</a>
+      <a href="/login" class="btn-primary-custom"><i class="bi bi-shield-lock-fill"></i> Log In</a>
+    </div>
+  </div>
+</nav>
+
+<main role="main">
+  <!-- Hero Section -->
+  <section class="hero" aria-label="Hero">
+    <div class="floating-books" aria-hidden="true">
+      <div class="fb"></div>
+      <div class="fb"></div>
+      <div class="fb"></div>
+      <div class="fb"></div>
+      <div class="fb"></div>
+    </div>
+    <div class="hero-content">
+      <span class="hero-badge"><i class="bi bi-star-fill me-1"></i> The Ultimate Reading Platform</span>
+      <h1>Your next great read is <span class="highlight">one shelf away</span></h1>
+      <div class="typewriter" id="typewriter" aria-live="polite">Exploring worlds through words<span class="cursor"></span></div>
+      <div class="cta-group">
+        <a href="/register" class="btn btn-primary-custom"><i class="bi bi-book-fill"></i> Start Reading Free</a>
+        <a href="/features" class="btn btn-outline-light"><i class="bi bi-info-circle"></i> See Features</a>
+      </div>
+      <div class="live-stats">
+        <div class="ls-item"><div class="ls-num" id="lsBooks">—</div><div class="ls-label">Books</div></div>
+        <div class="ls-item"><div class="ls-num" id="lsUsers">—</div><div class="ls-label">Readers</div></div>
+        <div class="ls-item"><div class="ls-num" id="lsReviews">—</div><div class="ls-label">Reviews</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Books -->
+  <section class="section" aria-label="Featured books">
+    <div class="section-header">
+      <h2>📚 Trending Books</h2>
+      <p>Discover what the community is reading right now</p>
+    </div>
+    {% if has_books %}
+    <div class="featured-carousel">
+      <div id="bookCarousel" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-inner">
+          {{ carousel_html|safe }}
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#bookCarousel" data-bs-slide="prev" aria-label="Previous books">
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#bookCarousel" data-bs-slide="next" aria-label="Next books">
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+    {% else %}
+    <div class="text-center py-4">
+      <div style="font-size:3rem;margin-bottom:.5rem;">📖</div>
+      <p class="text-muted">Books coming soon. Stay tuned!</p>
+    </div>
+    {% endif %}
+  </section>
+
+  <!-- Features -->
+  <section class="section" aria-label="Features">
+    <div class="section-header">
+      <h2>✨ Everything a Reader Needs</h2>
+      <p>Powerful tools to enhance your reading experience</p>
+    </div>
+    {{ features_html|safe }}
+  </section>
+
+  <!-- Social Proof -->
+  <section class="section social-proof" aria-label="What readers say">
+    <div class="section-header">
+      <h2>💬 Loved by Readers</h2>
+      <p>Join thousands of happy readers on BookTale</p>
+    </div>
+    {{ testimonials_html|safe }}
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section" aria-label="Join BookTale">
+    <h2>Ready to Start Your Reading Journey?</h2>
+    <p>Join 10,000+ readers who are already discovering, tracking, and sharing their love for books.</p>
+    <a href="/register" class="btn btn-primary-custom"><i class="bi bi-rocket-takeoff-fill"></i> Get Started Free</a>
+  </section>
+</main>
+
+<!-- Footer -->
+<footer class="footer" role="contentinfo">
+  <div class="footer-inner">
+    <div>
+      <h4>📖 BookTale</h4>
+      <p>Your personal reading companion. Discover, track, and share your reading journey with a community of book lovers.</p>
+    </div>
+    <div>
+      <h4>Product</h4>
+      <a href="/features">Features</a>
+      <a href="/landing">Home</a>
+      <a href="/books">Browse Books</a>
+    </div>
+    <div>
+      <h4>Company</h4>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/terms">Terms of Service</a>
+    </div>
+    <div>
+      <h4>Community</h4>
+      <a href="/feed">Social Feed</a>
+      <a href="/clubs">Book Clubs</a>
+      <a href="/challenge">Reading Challenge</a>
+    </div>
+  </div>
+  <div class="copyright">&copy; 2026 BookTale. All rights reserved.</div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" defer></script>
+<script>
+// Typewriter effect
+(function(){
+  var genres = [
+    "Exploring fantasy realms through words",
+    "Discovering hidden literary gems",
+    "Tracking your reading journey",
+    "Connecting with fellow book lovers",
+    "Uncovering your next favorite author",
+    "Diving into scientific discoveries",
+    "Exploring philosophy and ideas"
+  ];
+  var el = document.getElementById('typewriter');
+  if(!el) return;
+  var idx = 0, charIdx = 0, isDeleting = false;
+  function type(){
+    var current = genres[idx];
+    if(isDeleting){
+      el.innerHTML = current.substring(0, charIdx--) + '<span class="cursor"></span>';
+      if(charIdx < 0){ isDeleting = false; idx = (idx + 1) % genres.length; setTimeout(type, 500); return }
+      setTimeout(type, 30);
+    } else {
+      el.innerHTML = current.substring(0, charIdx++) + '<span class="cursor"></span>';
+      if(charIdx > current.length){ isDeleting = true; setTimeout(type, 2000); return }
+      setTimeout(type, 50);
+    }
+  }
+  type();
+})();
+
+// Load live stats
+(function(){
+  fetch('/api/seed/stats').then(function(r){return r.json()}).then(function(d){
+    if(d.total_books){var el=document.getElementById('lsBooks');if(el)el.textContent=d.total_books.toLocaleString()}
+    if(d.total_users){var el=document.getElementById('lsUsers');if(el)el.textContent=d.total_users.toLocaleString()}
+  }).catch(function(){
+    fetch('/api/analytics/monthly').then(function(r){return r.json()}).then(function(d){
+      if(d.values&&d.values.length){var total=d.values.reduce(function(a,b){return a+b},0);var el=document.getElementById('lsBooks');if(el)el.textContent=total}
+    }).catch(function(){});
+  });
+  // Load reviews count from seed
+  fetch('/api/seed/stats').then(function(r){return r.json()}).then(function(d){
+    if(d.total_ratings){var el=document.getElementById('lsReviews');if(el)el.textContent=d.total_ratings.toLocaleString()}
+  }).catch(function(){});
+})();
+</script>
+</body>
+</html>
