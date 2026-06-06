@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#4f46e5">
+<meta name="description" content="BookTale - Your next great read is one shelf away. Discover, track, and share your reading journey.">
+<title>{% if title %}{{ title }}{% else %}{% block title %}BookTale{% endblock %}{% endif %} — BookTale</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/booktale.css">
+{% block styles %}{% endblock %}
+</head>
+<body>
+<!-- Skip link -->
+<a href="#mainContent" class="skip-link">Skip to main content</a>
+
+<!-- Top Navigation -->
+<nav class="top-nav" role="navigation" aria-label="Site navigation">
+  <div class="nav-inner" style="max-width:1200px;margin:0 auto;padding:.6rem 1.5rem;display:flex;align-items:center;justify-content:space-between;">
+    <a href="/landing" class="logo" style="font-size:1.3rem;font-weight:800;color:var(--primary);text-decoration:none;display:flex;align-items:center;gap:8px;">
+      <i class="bi bi-book-fill"></i> BookTale
+    </a>
+    <div class="nav-links" style="display:flex;align-items:center;gap:8px;">
+      <a href="/landing" style="padding:.4rem 1rem;border-radius:9999px;font-size:.85rem;font-weight:500;color:var(--text);text-decoration:none;">Home</a>
+      <a href="/features" style="padding:.4rem 1rem;border-radius:9999px;font-size:.85rem;font-weight:500;color:var(--text);text-decoration:none;">Features</a>
+      <a href="/login" style="padding:.4rem 1rem;border-radius:9999px;font-size:.85rem;font-weight:500;color:var(--text);text-decoration:none;">About</a>
+      <a href="/login" class="btn btn-primary btn-sm" style="padding:.4rem 1.2rem;"><i class="bi bi-shield-lock-fill"></i> Sign In</a>
+      <a href="/register" class="btn btn-primary btn-sm" style="padding:.4rem 1.2rem;"><i class="bi bi-person-plus-fill"></i> Get Started</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Main Content -->
+<main role="main" id="mainContent">
+  {% block content %}{{ content|safe }}{% endblock %}
+</main>
+
+<!-- Footer -->
+<footer class="footer" role="contentinfo" style="background:#0f0f1a;color:rgba(255,255,255,.5);padding:3rem 1.5rem 1.5rem;">
+  <div style="max-width:1100px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:2rem;">
+    <div>
+      <h4 style="color:white;font-size:.9rem;font-weight:700;margin-bottom:1rem;">📖 BookTale</h4>
+      <p style="font-size:.8rem;line-height:1.5;">Your personal reading companion. Discover, track, and share your reading journey with a community of book lovers.</p>
+    </div>
+    <div>
+      <h4 style="color:white;font-size:.9rem;font-weight:700;margin-bottom:1rem;">Product</h4>
+      <a href="/features" style="color:rgba(255,255,255,.5);text-decoration:none;display:block;font-size:.8rem;margin-bottom:.4rem;">Features</a>
+      <a href="/landing" style="color:rgba(255,255,255,.5);text-decoration:none;display:block;font-size:.8rem;margin-bottom:.4rem;">Home</a>
+      <a href="/books" style="color:rgba(255,255,255,.5);text-decoration:none;display:block;font-size:.8rem;margin-bottom:.4rem;">Browse Books</a>
+    </div>
+    <div>
+      <h4 style="color:white;font-size:.9rem;font-weight:700;margin-bottom:1rem;">Company</h4>
+      <a href="/about" style="color:rgba(255,255,255,.5);text-decoration:none;display:block;font-size:.8rem;margin-bottom:.4rem;">About</a>
+      <a href="/privacy" style="color:rgba(255,255,255,.5);text-decoration:none;display:block;font-size:.8rem;margin-bottom:.4rem;">Privacy</a>
+      <a href="/terms" style="color:rgba(255,255,255,.5);text-decoration:none;display:block;font-size:.8rem;margin-bottom:.4rem;">Terms</a>
+    </div>
+    <div>
+      <h4 style="color:white;font-size:.9rem;font-weight:700;margin-bottom:1rem;">Community</h4>
+      <a href="/feed" style="color:rgba(255,255,255,.5);text-decoration:none;display:block;font-size:.8rem;margin-bottom:.4rem;">Social Feed</a>
+      <a href="/clubs" style="color:rgba(255,255,255,.5);text-decoration:none;display:block;font-size:.8rem;margin-bottom:.4rem;">Book Clubs</a>
+      <a href="/challenge" style="color:rgba(255,255,255,.5);text-decoration:none;display:block;font-size:.8rem;margin-bottom:.4rem;">Reading Challenge</a>
+    </div>
+  </div>
+  <div style="text-align:center;padding-top:2rem;margin-top:2rem;border-top:1px solid rgba(255,255,255,.08);font-size:.75rem;">
+    &copy; 2026 BookTale. All rights reserved.
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" defer></script>
+<script src="/static/js/utils.js"></script>
+<script src="/static/js/theme.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

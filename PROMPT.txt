@@ -1,0 +1,1288 @@
+Here is the complete BookTale v5.0 Master Prompt in full:
+
+---
+
+# MASTER PROMPT: BookTale v5.0 — Full-Stack Modernization, Complete Feature Activation & Intelligent Enhancement
+
+## ROLE & MISSION
+
+You are a **Principal Full-Stack Software Architect**, **Senior Python/Flask Engineer**, **UX/UI Specialist**, and **ML Integration Engineer**. Your mission is to deliver **BookTale v5.0** — a production-grade, accessible, intelligent, and visually stunning hybrid platform combining a **professional Library Management System** with a **rich social reading experience** (Goodreads + Letterboxd + StoryGraph + gamification). Every line of code must be clean, semantic, performant, and delightful.
+
+---
+
+## TECH STACK
+
+- **Backend**: Python 3.10+, Flask 3.0+, Flask-SocketIO (real-time), JSON flat-file storage (SQLite migration path noted)
+- **Frontend**: Vanilla ES6 modules, CSS custom properties, Semantic HTML5 — no Webpack, no Vite, no heavy frameworks
+- **ML/Data**: `Recommendation Systems/` folder — existing trained model + 11,127-book Goodreads dataset. All recommendations must draw from this folder.
+- **Charts**: Chart.js (already imported — must actually render, not leave empty canvases)
+- **Real-time**: Flask-SocketIO for feed, notifications, typing indicators, live activity
+
+---
+
+## PART 1: CRITICAL BUGS TO FIX IMMEDIATELY
+
+### 1.1 Layout / Navigation Chaos
+Two conflicting nav systems exist: a left sidebar (Home / Explore / Notifications / Books / Series / Challenge / Progress / Wishlist / Diary / Profile / Users / Reports / Recommend) AND an old top nav bar (LibraryMS | Dashboard | Books | Series | Challenge | Progress | Suggest | Feed). Eliminate the old top nav bar entirely. The left sidebar is the ONE persistent nav. Challenge, Wishlist, Diary, Reading Progress, and all other authenticated pages must use the unified sidebar layout. "Home" currently opens the social feed — this is fine but add a redirect so `/` for authenticated users hits `/feed`.
+
+### 1.2 Social Feed (/feed) — Stuck on Loading
+The "Following" tab shows a loading spinner indefinitely. Wrap all feed fetch calls in `try/catch` with fallback empty states:
+- Following empty: "Follow some readers to see their posts here" + `[Explore Readers]` button
+- Trending empty: "No trending posts yet" + `[Be the first to post]` button
+- Discover empty: Show 4–6 suggested users with `[Follow]` buttons (pull from `/api/users/suggested`)
+- Right panel "Trending Books" — fix the `/api/books/trending` endpoint
+- Right panel "Who to follow" — fix `/api/users/suggested`
+
+### 1.3 Explore Page (/explore) — Completely Empty
+Currently shows only "Search Books & People" and a Ctrl+K hint. Replace with a rich discovery hub (see Part 3, Page Group 4).
+
+### 1.4 Profile Page — "timep" Text Overflow
+"AVG RATING" stat card shows "timep" (truncated "timepass") overflowing its container. The Reading Stats grid cells must have overflow handling. "Timepass" is the rating label — render it in amber color with proper truncation and tooltip on hover showing full value.
+
+### 1.5 Dashboard Rainbow Progress Bars
+Dashboard shows color-coded horizontal progress bars for Total Books / Users / Active Issues / Fines — these have no visual hierarchy, look broken in dark mode. Replace entirely with a clean stat card grid.
+
+### 1.6 All Sidebar Links Non-Functional
+Clicking Home, Explore, Notifications, Books, Series, Challenge, Progress, Wishlist, Diary, Profile, Users, Reports, Recommend in the sidebar either does nothing or shows a 404. Implement or wire up all routes listed in the sidebar. Every link must resolve to a functional page.
+
+### 1.7 ML Recommendations Not Used
+The `Recommendation Systems/` folder contains a trained ML model and the full Goodreads dataset but the recommendations page does not use it. Integrate the model. Load the dataset at startup. Serve personalized recommendations via `/api/recommendations/<user_id>`. Add a fallback (trending/popular) for cold-start users.
+
+### 1.8 Charts Rendering Empty
+Dashboard Monthly Trends chart, Challenge Monthly Progress chart, Reports charts — all have Chart.js canvas elements but render blank. Initialize all Chart.js instances properly in `DOMContentLoaded` blocks with real data from API calls. Never leave a canvas uninitialized.
+
+### 1.9 Notifications Stats — Raw Text
+"0 Total / 0 Unread / 0 Read" is displayed as plain text lines with no card structure. Fix with stat card grid.
+
+### 1.10 Reports Page — One Giant Card Per Metric
+Each single metric gets its own full-width card. Group into semantic sections with 2–4 metrics per row.
+
+### 1.11 Favorite Books Grid — Broken Empty State
+Shows "Search to add / Drag to reorder (you)" as plain text. Fix with proper slot UI using dashed border + plus icon.
+
+### 1.12 Books Page — Single Column Waste
+Desktop shows one book card per row. Fix: CSS Grid with `repeat(auto-fill, minmax(180px, 1fr))`.
+
+### 1.13 Landing Page — Books Counter Shows 0
+"0 BOOKS" in the live stats bar despite 11,127 books in the Goodreads dataset. Seed the stats from the Goodreads dataset on first load. `/api/seed/stats` must return correct counts.
+
+### 1.14 "BOOKSOCIAL" Watermark Overflow
+Fix: `opacity: 0.08`, `overflow: hidden`, `user-select: none`, `pointer-events: none`.
+
+---
+
+## PART 2: MANDATORY ARCHITECTURAL REQUIREMENTS
+
+### 2.1 Unified Layout System
+
+One `base.html` master template:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ <header> TOP APP BAR (60px fixed)                       │
+│  [📚 BookTale logo]  [Ctrl+K search]  [🔔] [🌙] [SA▾] │
+├─────────────┬───────────────────────┬───────────────────┤
+│ <nav>       │ <main role="main">    │ <aside>           │
+│ LEFT        │ PAGE CONTENT          │ RIGHT PANEL       │
+│ SIDEBAR     │ (flex-1)              │ (300px, optional) │
+│ (240px)     │                       │                   │
+└─────────────┴───────────────────────┴───────────────────┘
+│ <footer>                                                 │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Top App Bar** (60px, fixed):
+- Left: BookTale logo (book icon + wordmark)
+- Center: Global search bar triggering Ctrl+K overlay
+- Right: Notifications bell (badge, `aria-live="polite"`), theme toggle (dark/light/sepia, `aria-pressed`), user avatar dropdown (Profile / Settings / Logout)
+
+**Left Sidebar** (240px, fixed, on ALL authenticated pages):
+- Nav items: Home, Explore, Notifications (badge), Books, Series, Challenge, Progress, Wishlist, Diary, Profile, Users (admin only), Reports (admin only), Recommend, Feed
+- `aria-current="page"` on active link
+- Collapsible to icon-only mode (saves to `localStorage`)
+- Bottom: user avatar + name + handle + `[Post]` button + logout icon
+
+**Right Panel** (300px, collapsible):
+- Trending Books widget
+- Who to Follow widget
+- Reading Stats summary (on profile-adjacent pages)
+- AI "For You" teaser (on feed/explore)
+
+**Template Hierarchy**:
+- `base.html` → all authenticated pages
+- `landing_base.html` → public landing, features, about, terms, privacy
+- `auth_base.html` → login, register, forgot/reset password
+- `error_base.html` → 404, 403, 500, maintenance
+
+### 2.2 Semantic HTML5
+
+Every page must use:
+
+```
+<header>                    — top app bar only
+<nav role="navigation"
+     aria-label="Main navigation">  — left sidebar
+<main role="main">          — exactly one per view
+<article>                   — each post, review, diary entry
+<section aria-labelledby>   — named content regions
+<figure> + <figcaption>     — all book covers
+<aside>                     — right panel widgets
+<footer>                    — page footer
+<table> + <caption>
+  + <thead> + <th scope>    — data tables
+<dl><dt><dd>                — label/value pairs
+```
+
+ARIA requirements (non-negotiable):
+- `aria-live="polite"` on: notification bell count, feed container, typing indicators, live search results
+- `aria-pressed` on: theme toggle, grid/list toggle, follow button, like button
+- `aria-label` on: all icon-only buttons
+- `aria-current="page"` on active sidebar link
+- `role="status"` on loading skeletons
+- `aria-expanded` on collapsible sections
+- `aria-selected` on active tabs
+- `aria-required="true"` + `*` on required form fields
+- `role="alert" aria-live="assertive"` on form error messages
+- `role="tablist"` + `role="tab"` on tab components
+
+### 2.3 CSS Design System (booktale.css)
+
+Define ALL of the following in `:root` and replicate for `[data-theme="dark"]` and `[data-theme="sepia"]`:
+
+```css
+/* SPACING */
+--space-2xs: 0.25rem;   /* 4px */
+--space-xs:  0.5rem;    /* 8px */
+--space-sm:  0.75rem;   /* 12px */
+--space-md:  1rem;      /* 16px */
+--space-lg:  1.5rem;    /* 24px */
+--space-xl:  2rem;      /* 32px */
+--space-2xl: 3rem;      /* 48px */
+
+/* TYPOGRAPHY */
+--text-xs:   0.75rem;
+--text-sm:   0.875rem;
+--text-base: 1rem;
+--text-lg:   1.125rem;
+--text-xl:   1.25rem;
+--text-2xl:  1.5rem;
+--text-3xl:  2rem;
+
+/* RADIUS */
+--radius-sm: 6px;
+--radius-md: 10px;
+--radius-lg: 16px;
+--radius-xl: 24px;
+
+/* BRAND COLORS */
+--color-primary:  #6366f1;
+--color-accent:   #a855f7;
+--color-success:  #22c55e;
+--color-warning:  #eab308;
+--color-danger:   #ef4444;
+--color-info:     #3b82f6;
+
+/* SURFACES (light) */
+--surface-0: #ffffff;
+--surface-1: #f8f8fc;
+--surface-2: #f0f0f8;
+--surface-3: #e8e8f4;
+--border-subtle: rgba(0,0,0,0.06);
+
+/* SURFACES (dark) */
+[data-theme="dark"] {
+  --surface-0: #0f0f13;
+  --surface-1: #16161e;
+  --surface-2: #1e1e28;
+  --surface-3: #26263a;
+  --border-subtle: rgba(255,255,255,0.08);
+}
+
+/* SEPIA THEME */
+[data-theme="sepia"] {
+  --surface-0: #f4ede0;
+  --surface-1: #ede3d2;
+  --color-primary: #7c5c3a;
+}
+
+/* LAYOUT */
+--sidebar-width:  240px;
+--topbar-height:  60px;
+--panel-width:    300px;
+--content-max:    760px;
+--reading-width:  65ch;
+```
+
+Additional rules:
+- Book covers: `aspect-ratio: 2/3` — ALWAYS. Never let covers reflow.
+- Skeleton shimmers: `animation: shimmer 1.5s infinite linear` with `@media (prefers-reduced-motion: reduce) { animation: none; }`
+- Stat cards: `font-size: var(--text-3xl); font-variant-numeric: tabular-nums;`
+- Glassmorphic cards: `backdrop-filter: blur(12px); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);`
+- Dark mode stat contrast: all stat numbers must pass 4.5:1 contrast ratio minimum
+- Long-form text (diary, reviews): `max-width: var(--reading-width)` (65ch)
+
+---
+
+## PART 3: PAGE-BY-PAGE SPECIFICATIONS
+
+### Page Group 0: Base Templates
+
+**base.html** — Unified authenticated layout (described in 2.1). This is the first file to implement. All subsequent page templates `{% extends "base.html" %}`.
+
+**landing_base.html** — Full-width, no sidebar. Top nav: logo + [Features] [About] [Sign In] [Get Started]. Footer: logo, links, copyright.
+
+**auth_base.html** — Split-screen (50/50): left = book-cover mosaic (blurred, dark overlay, testimonial card, BookTale branding, live stats), right = centered white card with form. No sidebar.
+
+**error_base.html** — Minimal centered layout. Logo + icon + heading + message + CTA buttons.
+
+---
+
+### Page Group 1: Authentication Pages
+
+**Landing Page (/) — unauthenticated**
+
+Route: `/` when `current_user` is not authenticated. Redirect authenticated users to `/feed`.
+
+Sections:
+- **Hero**: Deep purple/indigo gradient. Animated headline: "Your next great read is one shelf away". Typewriter cycling through genres (Fantasy · Science Fiction · Mystery · Romance · History · Philosophy). CTAs: `[🚀 Get Started Free]` `[⚡ Explore Features]`. Right side: animated code card (keep existing).
+- **Live Stats Bar**: Horizontal strip with 4 animated count-up counters: Books in Library | Registered Readers | Transactions | Social Posts. Purple gradient background.
+- **Features Grid**: 3-column grid. Features: Library Management, AI Recommendations, Analytics & Reports, BookSocial Feed, Profiles & Community, Advanced Search, Reading Diary, Gamification & Challenges, Book Clubs, PWA Offline Mode.
+- **Featured Books Carousel**: 6 book covers in horizontal scroll with CSS parallax tilt on `mousemove`.
+- **Testimonials**: 3 quote cards from fictional readers with star ratings.
+- **CTA Section**: "Ready to Get Started?" + `[Sign In]` `[Learn More]`. Demo credentials in code style.
+- **Footer**: Logo + Platform links + Social links + Copyright.
+
+**Login Page (/login)**
+- Split-screen via `auth_base.html`
+- Fields: User ID (autofocus), Password (show/hide toggle, `aria-pressed`)
+- Remember me, Forgot password link
+- `[🔐 Log In]` — full-width, primary purple, loading spinner on submit
+- Error: `role="alert" aria-live="assertive"` inline below failing field
+
+**Register Page (/register)**
+- Role selector: `[📚 Reader]` `[🏛️ Librarian]` — styled toggle cards
+- Fields: Full Name, Email (optional), User ID (format hint: MEM-XXXX), Password (4-step strength meter), Confirm Password
+- Strength bar: 4 segments, red → orange → yellow → green
+- `[👤 Create Account]` with loading state
+
+**Forgot / Reset Password / Verify Email**
+- Routes: `/forgot-password`, `/reset-password`, `/verify-email`
+- Step indicator: 1 of 3 → 2 of 3 → 3 of 3 — horizontal pills with active/complete states
+- Large centered SVG icon per step (envelope, lock, checkmark)
+
+---
+
+### Page Group 2: Main Dashboard (/dashboard)
+
+Route: `/dashboard` — for librarian/admin after login. Readers redirect to `/feed`.
+
+**Welcome Banner**
+- Purple/pink gradient card (keep)
+- Time-aware greeting: "Good morning/afternoon/evening, [Name]"
+- Today's date, role badge
+- Quick stats as `<dl>` pairs
+- Keyboard hint: `Press <kbd>Ctrl</kbd>+<kbd>K</kbd> to search`
+
+**Stats Grid — REPLACE RAINBOW BARS**
+```html
+<section class="stats-grid" aria-label="Library overview">
+  <div class="stat-card" role="group" aria-label="Total Books">
+    <span class="stat-icon" aria-hidden="true">📚</span>
+    <span class="stat-number">223</span>
+    <span class="stat-label">Total Books</span>
+    <span class="stat-sub trend-up">+5 this month</span>
+  </div>
+  <!-- Total Users | Active Issues | Transactions | Unique Borrowers | Avg Books/User -->
+</section>
+```
+CSS Grid: `grid-template-columns: repeat(auto-fit, minmax(140px, 1fr))`. Use `--color-primary` (purple) for accent. Semantic green for availability. Amber/red only for overdue/fines. Trend arrows: ↑ green / ↓ red / → neutral.
+
+**Quick Actions — REPLACE PLAIN LINK LIST**
+2–3 column grid of glassmorphic `<a>` cards:
+`[📚 Add Book]` `[👤 Add User]` `[🔍 Browse]` `[💡 Recommend]` `[📊 Reports]` `[🔖 Issue Book]`
+Each has `aria-label`, 48px icon, label text. Hover: lift + subtle purple glow.
+
+**Book Spotlight**
+Keep "RANDOM PICK" chip. Use `<figure><img alt="Cover of [Title] by [Author]" style="aspect-ratio:2/3"><figcaption>...</figcaption></figure>`. Add 2-line description, genre badge, Goodreads rating, `[Issue Now]` and `[View Details]` buttons. "Refresh" fetches a new random book via `/api/books/random`.
+
+**Top Categories Bar Chart**
+```
+Fiction    [████████████████░░░░] 130 (58.3%)
+Science    [████████░░░░░░░░░░░░]  62 (27.8%)
+```
+`role="img" aria-label="Category distribution bar chart"`. One bar color: `--color-primary`. No rainbow.
+
+**Trending Books Table — FIX COLORED MONTH LABELS**
+```html
+<table aria-label="Trending books this month">
+  <thead><tr>
+    <th scope="col">#</th>
+    <th scope="col">Title</th>
+    <th scope="col">Author</th>
+    <th scope="col">Category</th>
+    <th scope="col">Issues</th>
+  </tr></thead>
+</table>
+```
+Remove arbitrary color-per-month. Rank numbers use a single color (`--color-primary`).
+
+**Monthly Trends Chart**
+```javascript
+// Initialize in DOMContentLoaded — never leave canvas blank
+const ctx = document.getElementById('monthly-trends-chart').getContext('2d');
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    datasets: [{ data: monthlyData, backgroundColor: '#6366f1', borderRadius: 6 }]
+  },
+  options: {
+    plugins: { legend: { display: false } },
+    responsive: true,
+    maintainAspectRatio: false
+  }
+});
+```
+`aria-label="Monthly issues trend for 2026"` on the `<canvas>`.
+
+**Recent Activity Feed**
+```html
+<ol aria-live="polite" aria-label="Recent library activity" class="activity-feed">
+  <li class="activity-item">
+    <span class="activity-icon" aria-hidden="true">📥</span>
+    <span class="activity-text">MEM-0042 borrowed <a href="/books/123">The Alchemist</a></span>
+    <time class="activity-time" datetime="2026-06-05T10:30:00">2 hours ago</time>
+  </li>
+</ol>
+```
+Empty state: SVG illustration + "No activity yet. The library is quiet." + `[Add a Book]`.
+
+**Overdue Books Panel**
+If 0: green checkmark + "No overdue books! The library is healthy."
+If >0: red alert banner, count badge, top 5 list, `[View All Overdue]`.
+
+---
+
+### Page Group 3: Social Home / Feed (/feed)
+
+**Compose Box**
+```html
+<section aria-label="Create a post" class="compose-section">
+  <div role="form" aria-label="Post composer" class="compose-box">
+    <img src="[avatar]" alt="Your avatar" class="compose-avatar">
+    <div class="compose-content">
+      <textarea placeholder="What are you reading? Share your thoughts..."
+                aria-label="Post content" maxlength="500" id="post-content"></textarea>
+      <div class="compose-toolbar">
+        <button aria-label="Attach photo">📷 Photo</button>
+        <button aria-label="Tag a book">📚 Book</button>
+        <button aria-label="Add hashtag">#️⃣ Tag</button>
+        <span aria-live="polite" id="char-count">0 / 500</span>
+        <button type="button" id="submit-post" aria-label="Submit post" class="btn-primary">Post</button>
+      </div>
+    </div>
+  </div>
+</section>
+```
+
+**Feed Tabs**
+```html
+<div role="tablist" aria-label="Feed filter" class="feed-tabs">
+  <button role="tab" aria-selected="true"  id="tab-following" aria-controls="panel-following">Following</button>
+  <button role="tab" aria-selected="false" id="tab-trending"  aria-controls="panel-trending">Trending</button>
+  <button role="tab" aria-selected="false" id="tab-discover"  aria-controls="panel-discover">Discover</button>
+</div>
+```
+
+**Feed Posts**
+```html
+<article aria-label="Post by @username" class="feed-post">
+  <header class="post-header">
+    <a href="/profile/userid"><img ...> @username</a>
+    <time datetime="...">2h ago</time>
+  </header>
+  <div class="post-body">
+    <p>Post content...</p>
+    <div class="book-embed" aria-label="Tagged book: The Great Gatsby">...</div>
+  </div>
+  <footer class="post-actions">
+    <button aria-label="Upvote"  aria-pressed="false">▲ 12</button>
+    <button aria-label="Like"    aria-pressed="false">♥ 8</button>
+    <button aria-label="Comment">💬 3</button>
+    <button aria-label="Repost"  aria-pressed="false">↻ Repost</button>
+    <button aria-label="More options">⋯</button>
+  </footer>
+</article>
+```
+
+**Empty States — CRITICAL, FIX INFINITE SPINNER**
+- Following empty: Illustration + "Follow readers to see their posts here" + `[Explore Readers →]`
+- Trending empty: "No trending posts yet" + `[Be the first to post]`
+- Discover empty: 4–6 suggested user cards with `[Follow]`
+- On error/timeout: "Couldn't load posts. [Try Again]" — never leave a spinner running indefinitely
+
+**Real-Time via SocketIO**
+- `socket.on('new_post', ...)` — inject at top with slide-in animation
+- "X new posts" banner when new posts arrive while user has scrolled down
+
+---
+
+### Page Group 4: Explore (/explore) — REPLACE EMPTY PAGE
+
+```html
+<main role="main" class="explore-main">
+
+  <section aria-label="Search" class="explore-search-hero">
+    <input type="search" placeholder="Search books, readers, authors, topics..."
+           aria-label="Explore search" class="explore-search-input">
+  </section>
+
+  <section aria-labelledby="trending-heading">
+    <h2 id="trending-heading">Trending This Week</h2>
+    <div class="horizontal-scroll" role="list"><!-- 6 book cards --></div>
+  </section>
+
+  <section aria-labelledby="foryou-heading">
+    <h2 id="foryou-heading">✨ Recommended For You</h2>
+    <p class="section-sub">Based on your reading history</p>
+    <div class="book-grid"><!-- 4 ML-personalized cards --></div>
+  </section>
+
+  <section aria-labelledby="readers-heading">
+    <h2 id="readers-heading">Readers to Follow</h2>
+    <!-- 4–6 user cards: avatar + name + bio snippet + [Follow] button -->
+  </section>
+
+  <section aria-labelledby="clubs-heading">
+    <h2 id="clubs-heading">Popular Book Clubs</h2>
+    <!-- 3 club cards: current book cover + name + member count + genre tag -->
+  </section>
+
+  <section aria-labelledby="hashtags-heading">
+    <h2 id="hashtags-heading">Trending Topics</h2>
+    <div class="hashtag-cloud">
+      <a href="/search?tag=fantasy" class="hashtag-pill">#fantasy</a>
+      <a href="/search?tag=sciencefiction" class="hashtag-pill">#sciencefiction</a>
+      <!-- etc. -->
+    </div>
+  </section>
+
+  <section aria-labelledby="challenge-heading">
+    <h2 id="challenge-heading">Community Challenge — June 2026</h2>
+    <!-- Challenge card: progress, participant count, CTA -->
+  </section>
+
+</main>
+```
+
+API endpoints to implement: `/api/books/trending`, `/api/users/suggested`, `/api/clubs/popular`, `/api/tags/trending`, `/api/recommendations/explore`
+
+---
+
+### Page Group 5: Notifications (/notifications)
+
+**Stats Section — FIX RAW TEXT**
+```html
+<section aria-label="Notification statistics" class="stats-grid">
+  <div class="stat-card" role="group" aria-label="Total">
+    <span class="stat-number">0</span>
+    <span class="stat-label">Total</span>
+  </div>
+  <div class="stat-card" role="group" aria-label="Unread">
+    <span class="stat-number" style="color:var(--color-warning)">0</span>
+    <span class="stat-label">Unread</span>
+  </div>
+  <div class="stat-card" role="group" aria-label="Read">
+    <span class="stat-number" style="color:var(--color-success)">0</span>
+    <span class="stat-label">Read</span>
+  </div>
+</section>
+```
+
+By Type breakdown: `<dl>` list — `<dt>Follow</dt><dd>3</dd>` etc.
+
+**Notification Items**
+```html
+<ol aria-label="Notifications" class="notifications-list">
+  <li class="day-separator"><time>Today</time></li>
+  <article aria-label="Notification: New follower" class="notification-item unread">
+    <span class="notif-icon" aria-hidden="true">👤</span>
+    <div class="notif-body">
+      <strong>@username</strong> followed you
+      <time>2 hours ago</time>
+    </div>
+    <button aria-label="Mark as read">✓</button>
+  </article>
+</ol>
+```
+
+Unread: `border-left: 3px solid var(--color-primary)` + tinted background.
+
+Tabs: All | Mentions | Follow Requests | Challenge Updates | Book Availability Alerts
+
+Mark All Read: `aria-label="Mark all notifications as read"` with loading state.
+
+Bell badge: `aria-label="X unread notifications"`, `aria-live="polite"`, updates via SocketIO.
+
+---
+
+### Page Group 6: Books (/books)
+
+**Filter Bar**
+```html
+<form role="search" aria-label="Filter books" class="filter-bar">
+  <select aria-label="Category filter">...</select>
+  <select aria-label="Availability filter">...</select>
+  <select aria-label="Sort order">...</select>
+  <div class="view-toggle">
+    <button id="grid-view" aria-pressed="true"  aria-label="Grid view">⊞</button>
+    <button id="list-view" aria-pressed="false" aria-label="List view">≡</button>
+  </div>
+</form>
+```
+
+**Inline Stats Bar**
+```html
+<div class="stats-inline" role="status" aria-label="Search results">
+  <span>223 Found</span> · <span>223 Available</span> · 
+  <span>0 Checked Out</span> · <span>100% Avail</span> · <span>11 Categories</span>
+</div>
+```
+
+**Book Card (Grid mode) — Jinja2 macro `book_card(book, mode='grid')`**
+```html
+<article class="book-card" aria-label="Book: {{ book.title }} by {{ book.author }}">
+  <figure>
+    <a href="/books/{{ book.id }}">
+      <img src="{{ book.cover_url }}"
+           alt="Cover of {{ book.title }} by {{ book.author }}"
+           loading="lazy" decoding="async"
+           style="aspect-ratio:2/3; width:100%; object-fit:cover;"
+           width="180" height="270">
+    </a>
+    <div class="availability-badge {{ 'available' if book.available else 'unavailable' }}"
+         aria-label="{{ 'Available' if book.available else 'Checked out' }}">
+      {{ 'Available' if book.available else 'Out' }}
+    </div>
+  </figure>
+  <figcaption>
+    <h3><a href="/books/{{ book.id }}">{{ book.title }}</a></h3>
+    <p class="book-author">{{ book.author }}</p>
+    <p class="book-category">{{ book.category }}</p>
+  </figcaption>
+</article>
+```
+
+**Book Card (List mode)**: Horizontal — cover (60px, `aspect-ratio:2/3`) + metadata + availability badge + `[Issue]` button.
+
+**Book Detail Page (/books/<id>)**
+- 2-column layout (60/40 on desktop, stacked on mobile)
+- Left 40%: Large cover `aspect-ratio:2/3`, high-res
+- Right 60%: `<h1>` Title, `<h2>` Author link, metadata table (ISBN, Year, Category, Pages, Publisher), description, availability indicator (X/Y copies, green/amber/red), action bar: `[Issue Now]` `[Reserve]` `[Add to Shelf ▼]` `[Add to Wishlist ☆]`
+- Below: Similar Books (horizontal scroll, 5 cards, from ML model)
+- Below: Star review distribution histogram + written reviews (each `<article>`)
+- Below: Discussion thread
+
+---
+
+### Page Group 7: Profile Pages (/profile, /profile/<uid>)
+
+**Profile Header**
+```html
+<section class="profile-header" aria-label="User profile">
+  <div class="profile-banner">
+    <span class="watermark" aria-hidden="true">BOOKSOCIAL</span>
+  </div>
+  <div class="profile-avatar-wrap">
+    <img src="..." alt="Profile picture of [Name]" 
+         class="profile-avatar" width="80" height="80">
+    <!-- Own profile only: -->
+    <button class="avatar-upload-btn" aria-label="Change profile photo">📷</button>
+  </div>
+  <h1 class="profile-name">System Admin</h1>
+  <p class="profile-handle">@ADMIN001</p>
+  <span class="role-badge">ADMIN</span>
+  <span class="online-dot" aria-label="Online"></span>
+  
+  <!-- FIX: proper dl, not raw "0 Following 0 Followers..." -->
+  <dl class="profile-stats-row">
+    <div class="profile-stat"><dd>0</dd><dt>Following</dt></div>
+    <div class="profile-stat"><dd>0</dd><dt>Followers</dt></div>
+    <div class="profile-stat"><dd>0</dd><dt>Books Read</dt></div>
+    <div class="profile-stat"><dd>0</dd><dt>Reviews</dt></div>
+    <div class="profile-stat"><dd>—</dd><dt>Avg Rating</dt></div>
+  </dl>
+
+  <div class="profile-badges">
+    <span class="badge badge-xp">0 pts</span>
+    <span class="badge badge-level">New Reader</span>
+    <span class="badge badge-streak">🔥 2-day streak</span>
+  </div>
+</section>
+```
+
+**Favorite Books — FIX BROKEN EMPTY STATE**
+4 slots in 2×2 grid:
+```html
+<!-- Empty slot -->
+<div class="fav-slot empty" role="button" 
+     aria-label="Add a favorite book" tabindex="0">
+  <span aria-hidden="true">+</span>
+  <span>Add a book</span>
+</div>
+<!-- Filled slot -->
+<div class="fav-slot filled" draggable="true">
+  <img src="..." alt="Cover of [Title]" style="aspect-ratio:2/3">
+  <!-- title tooltip on hover -->
+</div>
+```
+"Drag to reorder" instruction: only show after at least 1 book is added.
+
+**Reading Stats — FIX "timep" OVERFLOW**
+```html
+<section aria-label="Reading statistics" class="reading-stats-grid">
+  <div class="reading-stat">
+    <strong>0</strong><span>Total Read</span>
+  </div>
+  <div class="reading-stat">
+    <strong>0</strong><span>Pages Read</span>
+  </div>
+  <div class="reading-stat">
+    <strong>0</strong><span>Rereads</span>
+  </div>
+  <div class="reading-stat">
+    <strong style="color:var(--color-warning)" 
+            title="Timepass" class="truncate">Timepass</strong>
+    <span>Avg Rating</span>
+  </div>
+</section>
+```
+CSS: `overflow:hidden; text-overflow:ellipsis; white-space:nowrap` on all stat values. Full value in tooltip.
+
+**Activity Heatmap**
+Keep existing GitHub-style grid. Add:
+- Month labels above columns
+- Year selector: `[2024]` `[2025]` `[2026]` — pill toggle, updates via API
+- Tooltip on hover: "3 books logged on 15 March 2026"
+- Legend: `[less] ░ ▒ ▓ █ [more]`
+
+**Achievements Grid**
+15 badges in 3×5 grid. Locked: `filter:grayscale(1); opacity:0.4`. Unlocked: full color. Each: icon + name + description tooltip. "0/15" counter in section header.
+
+**Below the Fold**
+- Recent Diary Entries (3): cover thumbnail + date + rating badge + excerpt
+- Reading Challenge Ring: SVG arc progress
+- Books By Month chart (Chart.js bar)
+- Rating Distribution chart (Chart.js horizontal bar)
+- Want to Read shelf preview
+- Currently Reading shelf preview
+
+---
+
+### Page Group 8: Reading Diary (/diary) — FIX LAYOUT
+
+FIRST: migrate from old top nav to `base.html` sidebar layout.
+
+THEN:
+- Stats row (4 stat cards): Books Read | Rereads | Pages | Avg Rating (amber for "Timepass")
+- `[+ Log a Book]` button: top-right, primary color
+- Each entry: `<article class="diary-entry">` with cover (60px, 2/3 aspect) + title/author links + date + rating badge (color-coded) + vibe/mood tags (pill chips) + diary text (`max-width:65ch`; spoiler blur if `data-spoiler="true"` + "Reveal Spoiler" toggle) + edit/delete (own entries)
+- Right panel: Rating Distribution chart, Top Genres list, reading streak
+- Empty state: illustration + "Your reading diary is empty. Log your first book!" + `[+ Log a Book]`
+
+---
+
+### Page Group 9: Reading Challenge (/challenge) — FIX LAYOUT
+
+FIRST: migrate from old top nav to `base.html` sidebar layout.
+
+THEN:
+- Year selector: `[2024]` `[2025]` `[2026]` prominent pills
+- Goal card: SVG arc progress ring. No goal: "Set a reading goal to get started" + `[Set Goal →]`
+- Pace badges: "Behind Pace" (red) / "On Track" (green) / "Ahead" (purple)
+- Projected completion date
+- Monthly Progress: Chart.js bar chart — MUST RENDER
+- Right panel: Leaderboard table (rank + avatar + name + books + progress %)
+- Past Challenges: year cards with achievement summaries
+- Share button: generate shareable progress image
+
+---
+
+### Page Group 10: Wishlist (/wishlist) — FIX LAYOUT
+
+FIRST: migrate from old top nav to `base.html` sidebar layout.
+
+THEN:
+- Stats row (5 stat cards): Total | Pending | Approved | Rejected | Suggesters
+- Filter tabs: `[All]` `[Pending ⏳]` `[Approved ✅]` `[Rejected ❌]` — `role="tablist"`
+- `[+ Suggest a Book]` button: top-right, proper `<button>`
+- Item card: cover (2/3 aspect) + title + author + category + status badge + suggester + date + admin actions (Approve/Reject for librarians)
+- Trending Suggestions sidebar: with cover thumbnails
+- Empty state: illustration + "No suggestions yet." + `[Suggest a Book]`
+
+---
+
+### Page Group 11: Reading Progress (/progress) — FIX LAYOUT
+
+FIRST: migrate from old top nav to `base.html`.
+
+THEN:
+```html
+<article class="reading-progress-card" 
+         aria-label="Reading progress for {{ book.title }}">
+  <figure>
+    <img src="{{ book.cover }}" 
+         alt="Cover of {{ book.title }}"
+         style="aspect-ratio:2/3; width:80px">
+  </figure>
+  <div class="progress-content">
+    <h3>{{ book.title }}</h3>
+    <p>{{ book.author }}</p>
+    <label for="prog-{{ book.id }}">Progress</label>
+    <div class="range-wrapper">
+      <input type="range" 
+             id="prog-{{ book.id }}"
+             min="0" max="{{ book.pages }}" 
+             value="{{ progress.page }}"
+             aria-valuemin="0" 
+             aria-valuemax="{{ book.pages }}"
+             aria-valuenow="{{ progress.page }}"
+             aria-label="Reading progress for {{ book.title }}">
+      <output for="prog-{{ book.id }}">{{ progress.pct }}%</output>
+    </div>
+    <p>Page {{ progress.page }} of {{ book.pages }}</p>
+    <button type="button">Update Progress</button>
+  </div>
+</article>
+```
+Empty state: "You're not currently reading anything" + `[Browse Books]` + `[View Shelves]`.
+
+---
+
+### Page Group 12: Recommendations (/recommendations) — CRITICAL: USE ML MODEL
+
+**Backend Integration**
+```python
+# recommendations_service.py
+import pickle, pandas as pd
+from pathlib import Path
+
+REC_MODEL_PATH = Path("Recommendation Systems/model.pkl")
+BOOKS_DATA_PATH = Path("Recommendation Systems/books.csv")
+
+# Load at app startup — not per request
+with open(REC_MODEL_PATH, 'rb') as f:
+    rec_model = pickle.load(f)
+books_df = pd.read_csv(BOOKS_DATA_PATH)
+
+@app.route('/api/recommendations/<user_id>')
+def get_recommendations(user_id):
+    reading_history = get_user_reading_history(user_id)
+    if not reading_history:
+        # Cold start: return popular from Goodreads dataset
+        popular = books_df.nlargest(12, 'average_rating')[
+            ['book_id','title','authors','average_rating','image_url']
+        ].to_dict('records')
+        return jsonify({'strategy': 'popular', 'books': popular})
+    # Personalized
+    recs = rec_model.recommend(user_id, reading_history, n=12)
+    return jsonify({'strategy': 'personalized', 'books': recs})
+```
+
+**Frontend Page**
+```html
+<main role="main" class="recommendations-main">
+
+  <section aria-labelledby="personalized-heading" class="rec-hero">
+    <h2 id="personalized-heading">✨ For You</h2>
+    <p>Based on your reading history</p>
+    <div class="book-grid"><!-- 6 cards with AI badge --></div>
+  </section>
+
+  <section aria-labelledby="trending-rec-heading">
+    <h2 id="trending-rec-heading">Trending This Month</h2>
+    <div class="horizontal-scroll"><!-- 8 cards --></div>
+  </section>
+
+  <section aria-labelledby="bestsellers-heading">
+    <h2 id="bestsellers-heading">All-Time Bestsellers</h2>
+    <div class="horizontal-scroll"><!-- 8 cards --></div>
+  </section>
+
+  <section aria-labelledby="coborrowed-heading">
+    <h2 id="coborrowed-heading">Readers who read X also loved...</h2>
+    <div class="book-grid"><!-- 6 cards --></div>
+  </section>
+
+  <section aria-labelledby="genre-rec-heading">
+    <h2 id="genre-rec-heading">Browse by Genre</h2>
+    <div role="tablist">
+      Fiction | Science | History | Philosophy | Mystery | ...
+    </div>
+    <div class="book-grid"><!-- tab-filtered cards --></div>
+  </section>
+
+</main>
+```
+
+AI badge on recommended cards:
+```html
+<div class="ai-badge" aria-label="AI Recommended"
+     title="Recommended based on your reading history">✨ AI Pick</div>
+```
+
+---
+
+### Page Group 13: User Management (/admin/users) — FIX TABLE
+
+**Fixed table layout**
+```css
+.users-table { table-layout: fixed; width: 100%; }
+.col-id     { width: 100px; }
+.col-user   { width: auto;  }
+.col-email  { width: 180px; }
+.col-role   { width: 100px; }
+.col-status { width: 90px;  }
+.col-action { width: 100px; }
+```
+
+**Stats row (fix cramped numbers)**
+```html
+<div class="stats-grid" aria-label="User statistics">
+  <div class="stat-card">
+    <span class="stat-number">10,001</span>
+    <span class="stat-label">Total Users</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-number" style="color:var(--color-success)">9,189</span>
+    <span class="stat-label">Active</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-number" style="color:var(--color-danger)">309</span>
+    <span class="stat-label">Blocked</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-number" style="color:var(--color-warning)">₹1,51,117</span>
+    <span class="stat-label">Unpaid Fines</span>
+  </div>
+</div>
+```
+
+Role distribution: Visual bar chart replacing plain text.
+```
+Admin     [███░░░░░░░░░░░] 3      (0.03%)
+Librarian [████░░░░░░░░░░] 8      (0.08%)
+Reader    [█████████████░] 9,990  (99.89%)
+```
+
+Search + filter bar above the table. Bulk action row (appears on checkbox selection): `[Block Selected]` `[Send Email]` `[Export]`.
+
+---
+
+### Page Group 14: Reports & Analytics (/reports) — FIX GROUPING
+
+```html
+<!-- Section A: Today & This Month -->
+<section aria-labelledby="today-report" class="report-section">
+  <h2 id="today-report">Today &amp; This Month</h2>
+  <div class="stats-2col">
+    <div class="stat-card"><span class="stat-number">0</span><span class="stat-label">Issued Today</span></div>
+    <div class="stat-card"><span class="stat-number">0</span><span class="stat-label">This Month</span></div>
+  </div>
+</section>
+
+<!-- Section B: Library Health -->
+<section aria-labelledby="health-report" class="report-section">
+  <h2 id="health-report">Library Health</h2>
+  <div class="stats-3col">
+    <div class="stat-card"><span style="color:var(--color-success)">100.0%</span><span>Availability</span></div>
+    <div class="stat-card"><span>0d</span><span>Avg Duration</span></div>
+    <div class="stat-card"><span>0</span><span>Active Issues</span></div>
+  </div>
+</section>
+
+<!-- Section C: Overdue & Fines -->
+<section aria-labelledby="overdue-report" class="report-section">
+  <h2 id="overdue-report">Overdue &amp; Fines</h2>
+  <div class="stats-2col">
+    <div class="stat-card"><span style="color:var(--color-danger)">0</span><span>Overdue</span></div>
+    <div class="stat-card"><span style="color:var(--color-warning)">₹0</span><span>Pending Fines</span></div>
+  </div>
+</section>
+
+<!-- Section D: Charts — all MUST render -->
+<!-- Monthly Trends (bar), Weekly Trend (line), Category (doughnut) -->
+
+<!-- Section E: Most Issued Books -->
+<table aria-label="Most issued books">
+  <caption>Top borrowed titles</caption>
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">Title</th>
+      <th scope="col">Author</th>
+      <th scope="col">Issues</th>
+    </tr>
+  </thead>
+</table>
+
+<!-- Section F: Category Distribution — CSS horizontal bars -->
+
+<!-- Export actions -->
+<div class="export-actions">
+  <button>🖨️ Print / PDF</button>
+  <button>📥 CSV Export</button>
+</div>
+```
+
+---
+
+### Page Group 15: Shelves (/shelves)
+
+```html
+<div role="tablist" aria-label="Book shelves">
+  <a role="tab" aria-selected="true"  href="?tab=want">Want to Read (0)</a>
+  <a role="tab" aria-selected="false" href="?tab=reading">Currently Reading (0)</a>
+  <a role="tab" aria-selected="false" href="?tab=read">Finished Reading (0)</a>
+  <a role="tab" aria-selected="false" href="?tab=favorites">Favorites (0)</a>
+  <a role="tab" aria-selected="false" href="?tab=dnf">Did Not Finish (0)</a>
+</div>
+```
+Each tab: book grid with drag-to-reorder. Contextual empty states (Currently Reading empty → `[Browse Books]`; Finished empty → `[Log a Book in Diary]`).
+
+---
+
+### Page Group 16: Settings (/settings)
+
+Tabs: `[Account]` `[Appearance]` `[Notifications]` `[Privacy]` `[Reading Preferences]`
+
+- **Account**: Name, Email, User ID (read-only), Change Password link, Danger Zone (Delete Account, red section, requires confirmation)
+- **Appearance**: Dark/Light/Sepia theme toggle, Font size (Small/Medium/Large), Default book view (Grid/List), Reduce motion toggle
+- **Notifications**: Checkboxes — Overdue reminders | New followers | Post likes/comments | Challenge milestones | Book availability alerts | System announcements
+- **Privacy**: Profile visibility (Public/Private), Who can see shelves (Everyone/Followers/Only Me), Who can see diary, Allow following
+- **Reading Preferences**: Favorite genres (multi-select chips), Languages, Book length (Short/Medium/Long)
+
+Admin Settings (`/admin/settings`): Tabs `[Site Settings]` `[Library]` `[Email/SMTP]` `[Security]`
+- Library: ISSUE_DAYS, FINE_PER_DAY, MAX_BORROW_LIMIT, MEMBERSHIP_VALIDITY_DAYS
+- Email: SMTP host/port/user/password, `[Send Test Email]` button
+- Security: Force logout all users, clear cache, backup now
+
+---
+
+### Page Group 17: Error Pages
+
+**404**: SVG book with "?" on cover. "Page not found." "Looks like this page wandered off the shelf." `[Go Home]` `[Browse Books]`
+
+**403**: SVG padlock. "You don't have permission to view this page." `[Go Back]` `[Log In as Different User]`
+
+**500**: SVG cracked book. "Something went wrong on our end. Our librarians are on it." `[Reload Page]` `[Go Home]`
+
+**Maintenance**: Full-screen overlay. BookTale logo + animated loading dots + "We'll be back soon. Estimated return: [time]"
+
+---
+
+## PART 4: REUSABLE COMPONENTS (Jinja2 Macros)
+
+### `book_card(book, mode='grid', show_badge=True)`
+Grid and List modes. Always uses `<article>`, `<figure>`, `<figcaption>`. `aria-label="Book: [Title] by [Author]"`. `aspect-ratio:2/3` always.
+
+### `user_avatar(user, size='md', show_online=False)`
+Sizes: `sm` (32px), `md` (44px), `lg` (80px).
+Initials fallback with deterministic color from `hash(user_id) → HSL hue`.
+Online dot if `show_online=True`.
+
+### `stat_card(label, value, sub=None, trend=None, color='default')`
+Large tabular number + label + optional subtext + optional trend arrow (↑↓→).
+Color options: `default` | `success` | `warning` | `danger` | `info`.
+
+### `loading_skeleton(type)`
+Types: `book_card` | `stat_card` | `user_row` | `feed_post` | `notification_item`
+Shimmer animation. Correct aspect ratios to prevent CLS. `role="status" aria-label="Loading..."` on each.
+
+### `empty_state(icon, heading, message, cta_text=None, cta_href=None)`
+Centered: icon (64px) + `<h3>` heading + `<p>` message + optional `<a>` CTA.
+Used everywhere. No bare "No X yet." strings.
+
+### `notification_item(notif)`
+Icon by type + text with `<strong>` username + action + book link + relative timestamp.
+Unread: `border-left: 3px solid var(--color-primary)` + tinted background.
+
+---
+
+## PART 5: NEW ORIGINAL FEATURES
+
+### 5.1 AI Reading Companion (Floating Widget)
+Floating button bottom-right (`aria-label="Open AI Reading Companion"`), opens a chat drawer (300px from right). Uses Goodreads dataset + user reading history as context. Features: "What should I read next?", "Summarize this book", "Give me discussion questions for [book]", "Find books similar to [title]". Backend: `/api/ai/chat` — TF-IDF similarity on dataset. Module: `ai-companion.js`.
+
+### 5.2 Reading Streak Flame 🔥
+Visible in top app bar (beside bell) and on profile. Consecutive days with diary log / progress update. At 7 days: toast notification "🔥 7-day streak!". At 30 days: golden flame badge + achievement unlock. Breaks at midnight if no activity. Backend: `calculate_streak(user_id)` called on every diary save. Module: `streak.js`.
+
+### 5.3 PDF Reading Journey Export
+Route: `/profile/<uid>/export/pdf`. Generates annual reading report: total books/pages/genres, reading heatmap, top 5 books with covers, goal progress, streak record. Use `weasyprint` or `reportlab` or browser `window.print()` with print-specific CSS.
+
+### 5.4 Smart Auto-Shelves
+System analyzes tags/categories and creates auto-shelves:
+- "Page-Turners" — books finished in < 3 days
+- "Cozy Reads" — romance, cozy mystery categories
+- "Mind-Bending" — philosophy, science categories
+- "Re-read Worthy" — books rated 5 stars
+
+Shown on shelves page under collapsible "Smart Shelves" section.
+
+### 5.5 Voice Diary Logging
+Microphone button on diary entry form: `[🎤 Dictate]`. Web Speech API: `new SpeechRecognition()` fills the textarea. Fallback toast: "Voice logging not supported in this browser." Works on Chrome, Edge, Safari. Module: `voice.js`.
+
+### 5.6 Sepia / Reading Focus Theme
+Third theme alongside Dark and Light. `[data-theme="sepia"]`: warm paper background `#f4ede0`, dark brown text `#2d1810`, amber accents, `font-family: Georgia, serif` for body text. Activated from Settings > Appearance or theme toggle (cycle: Light → Dark → Sepia). Module: `theme.js`.
+
+### 5.7 Book Clubs (/clubs)
+- `/clubs` — club list grid with cover collage + name + member count + genre tag + `[Join]` `[View]`
+- `/clubs/<id>` — club detail: current book, members list, forum thread list
+- `/clubs/<id>/forum/<topic_id>` — threaded discussion: `<article>` per post, replies indented with left-border accent (max 3 nesting levels)
+- Create club form: name + description + genre tags + public/private + starting book search
+
+### 5.8 Accessibility Mode
+Toggle in Settings > Appearance. Effects when enabled: OpenDyslexic font (CDN), letter-spacing `0.12em`, line-height `2.0`, base font-size `18px`, removes decorative animations, increased contrast ratios. Applied via `[data-mode="accessible"]` on `<html>`. Persisted in `localStorage`.
+
+### 5.9 Reading Calendar (/reading-calendar) — New Page
+Full-year calendar grid (52 × 7 days). Cell color intensity = number of diary entries that day (light lavender → deep purple). Click a day: popover showing diary entries for that day. Toggle: Calendar / Heatmap views. Year selector.
+
+### 5.10 Reading Analytics Dashboard (/analytics) — New Page
+Charts (all Chart.js):
+- Books per month — bar
+- Genres distribution — doughnut
+- Pages over time — cumulative line
+- Rating distribution — horizontal bar
+- Reading pace — line (pages/day)
+- Yearly reading heatmap
+
+---
+
+## PART 6: TECHNICAL REQUIREMENTS
+
+### 6.1 All Flask Routes (Every Route Must Return 200 with Correct Context)
+
+```python
+# Social & Reading
+@app.route('/feed')
+@app.route('/explore')
+@app.route('/notifications')
+@app.route('/shelves')
+@app.route('/diary')
+@app.route('/diary/new')
+@app.route('/challenge')
+@app.route('/progress')
+@app.route('/wishlist')
+@app.route('/reading-calendar')
+@app.route('/analytics')
+
+# Books
+@app.route('/books')
+@app.route('/books/<id>')
+@app.route('/books/add')
+@app.route('/books/<id>/edit')
+
+# Series & Authors
+@app.route('/series')
+@app.route('/series/<id>')
+@app.route('/author/<id>')
+
+# Profile
+@app.route('/profile')
+@app.route('/profile/<uid>')
+@app.route('/profile/edit')
+@app.route('/profile/<uid>/followers')
+@app.route('/profile/<uid>/following')
+@app.route('/profile/<uid>/export/pdf')
+
+# Social
+@app.route('/clubs')
+@app.route('/clubs/<id>')
+@app.route('/clubs/<id>/forum/<topic_id>')
+@app.route('/search')
+
+# Gamification
+@app.route('/gamification')
+
+# Recommendations
+@app.route('/recommendations')
+
+# Admin / Library Management
+@app.route('/dashboard')
+@app.route('/admin/users')
+@app.route('/admin/fines')
+@app.route('/admin/overdue')
+@app.route('/reports')
+@app.route('/settings')
+@app.route('/admin/settings')
+
+# API Endpoints (all return JSON)
+@app.route('/api/books/trending')
+@app.route('/api/books/random')
+@app.route('/api/users/suggested')
+@app.route('/api/recommendations/<uid>')
+@app.route('/api/feed/following')
+@app.route('/api/feed/trending')
+@app.route('/api/feed/discover')
+@app.route('/api/notifications/<uid>')
+@app.route('/api/seed/stats')
+@app.route('/api/clubs/popular')
+@app.route('/api/tags/trending')
+@app.route('/api/search')
+@app.route('/api/ai/chat', methods=['POST'])
+```
+
+### 6.2 SocketIO Events
+
+```python
+# Server emits:
+emit('new_post', post_data)       # to followers room
+emit('notification', notif_data)  # to user room
+emit('streak_update', data)       # to user room
+emit('book_available', data)      # to wishlist subscribers
+
+# Client listens in feed.js / notifications.js:
+socket.on('new_post', ...)
+socket.on('notification', ...)
+socket.on('streak_update', ...)
+```
+
+### 6.3 JavaScript Modules (/static/js/)
+
+- `feed.js` — post composition, feed loading, real-time updates, empty states
+- `charts.js` — initialize ALL Chart.js instances on DOMContentLoaded
+- `recommendations.js` — fetch and render ML recommendations
+- `search.js` — Ctrl+K overlay, unified search, 300ms debounce
+- `theme.js` — light/dark/sepia toggle, persist to localStorage
+- `notifications.js` — real-time badge updates, mark read
+- `drag-drop.js` — favorites drag-to-reorder, shelves reorder
+- `empty-states.js` — inject beautiful empty states where content is absent
+- `skeleton.js` — show/hide loading skeletons
+- `ai-companion.js` — floating AI chat widget
+- `streak.js` — streak calculation and display
+- `voice.js` — Web Speech API for diary dictation
+- `analytics.js` — reading analytics charts
+
+### 6.4 Performance Requirements
+
+- All `<img>`: `loading="lazy" decoding="async"` with explicit `width` and `height`
+- Skeleton shimmers on ALL async-loaded sections — prevent CLS
+- Search debounced: 300ms minimum
+- `aspect-ratio` on all images — no layout shift
+- Service Worker: static → cache-first; API → network-first with stale-while-revalidate
+- First Contentful Paint target: < 1.5s
+
+### 6.5 Accessibility Checklist
+
+- [ ] All images have descriptive alt text (never "cover" or "image")
+- [ ] All form inputs have associated `<label>` elements
+- [ ] Focus ring visible on ALL interactive elements — never `outline: none`
+- [ ] Color is never the only information conveyor — add icons/text labels always
+- [ ] Full keyboard navigation: dropdowns, modals, tabs, search overlay
+- [ ] Skip-to-main-content link at top of every page: `<a href="#main-content" class="skip-link">Skip to main content</a>`
+- [ ] All charts: `aria-label` + text alternative (`<figcaption>` or description paragraph)
+- [ ] Touch targets minimum 44×44px
+- [ ] All animations inside `@media (prefers-reduced-motion: no-preference) { ... }`
+- [ ] WCAG 2.2 AA: 4.5:1 for normal text, 3:1 for large text, in all three themes
+
+---
+
+## PART 7: DELIVERABLES ORDER
+
+Implement and deliver in this exact sequence:
+
+1. `booktale.css` — complete design system
+2. `base.html` — unified Jinja2 master template
+3. `landing_base.html` — public marketing base
+4. `auth_base.html` — split-screen auth base
+5. `error_base.html` — minimal error base
+6. Jinja2 macros: `book_card`, `stat_card`, `user_avatar`, `empty_state`, `skeleton`, `notification_item`
+7. Page templates in priority order:
+   1. `dashboard.html`
+   2. `explore.html` ⚠️ currently empty
+   3. `feed.html` ⚠️ stuck on loading
+   4. `books.html`
+   5. `book_detail.html`
+   6. `profile.html`
+   7. `profile_edit.html`
+   8. `notifications.html`
+   9. `wishlist.html`
+   10. `diary.html`
+   11. `challenge.html`
+   12. `progress.html`
+   13. `shelves.html`
+   14. `recommendations.html` ⚠️ must use ML
+   15. `search.html`
+   16. `users.html`
+   17. `reports.html`
+   18. `settings.html`
+   19. `clubs.html` + `club_detail.html`
+   20. `gamification.html`
+   21. `analytics.html` (new)
+   22. `reading_calendar.html` (new)
+   23. `series.html` + `series_detail.html`
+   24. `books_add.html` + `books_edit.html`
+   25. `landing.html` + `login.html` + `register.html` + error pages
+8. All Flask routes from Part 6.1
+9. All JavaScript modules from Part 6.3
+10. `recommendations_service.py` — ML model integration
+11. `CHANGELOG.md` — all changes, new routes, new features documented
+
+---
+
+## PART 8: ACCEPTANCE CRITERIA
+
+### UI/UX
+- [ ] No page shows a spinner that never resolves
+- [ ] Every empty state has illustration + message + CTA (no bare "No X yet.")
+- [ ] All sidebar links resolve to a real, functional page
+- [ ] No layout breaks at 320px, 768px, 1024px, 1440px
+- [ ] Dark mode: all text passes 4.5:1 contrast, no invisible elements
+- [ ] Book covers: `aspect-ratio:2/3` everywhere, never distorted
+- [ ] No duplicate navigation systems on any page
+- [ ] Sepia theme works correctly end-to-end
+
+### Functionality
+- [ ] Social feed loads (or shows correct empty state with CTA)
+- [ ] Explore page has real content in every section
+- [ ] Recommendations use ML model (fallback to trending for cold start)
+- [ ] All Chart.js charts render with real data — zero blank canvases
+- [ ] Notifications update in real-time via SocketIO
+- [ ] Reading streak tracks and displays correctly
+- [ ] Add / Edit / Delete book works end-to-end
+- [ ] Issue / Return / Renew book works end-to-end
+- [ ] Profile stats update when books are logged or reviewed
+- [ ] Ctrl+K global search overlay works
+
+### Data
+- [ ] Landing page stats show real counts (not 0 when dataset has 11,127 books)
+- [ ] Goodreads dataset accessible and used from `Recommendation Systems/` folder
+- [ ] Trending books pulls from actual issue/view history
+- [ ] Search returns results from full 11,127-book dataset
+
+---
+
+## DESIGN PHILOSOPHY
+
+BookTale must feel like a **premium reading companion**, not a generic SaaS tool.
+
+**Aesthetic direction**: warmth (generous whitespace, soft purple gradients, sepia mode paper feel), delight (book cover parallax tilt, smooth 200ms transitions, confetti on challenge completion), intelligence (AI badges with explanation tooltips, smart empty states that suggest actions), community (social proof — "3 of your followers read this"), trust (clean data tables, honest stats).
+
+**Color language**:
+- Purple/Indigo `#6366f1` — primary brand, CTAs, active states
+- Violet `#a855f7` — accent, gradients
+- Pink `#ec4899` — social, likes, hearts
+- Green `#22c55e` — available, on-track, success
+- Amber `#eab308` — warnings, "Timepass" rating, streaks
+- Red `#ef4444` — overdue, danger, blocked
+- Gray — neutral elements, secondary text, borders
+
+**Typography**:
+- Headings: Inter or system-ui, weight 600–700, tight tracking
+- Body: Inter or system-ui, weight 400, line-height 1.6
+- Code/IDs: JetBrains Mono or Fira Code
+- Sepia body: Georgia or serif
+
+---
+
+**Begin implementation now. Start with `booktale.css` then `base.html`. Every file must be complete, not truncated. Every route must work. Every empty state must be beautiful. Every chart must render. The ML model must be used. BookTale v5.0 must be ready for 10,000+ real users.**

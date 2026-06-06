@@ -132,16 +132,9 @@ __CONTENT__
         uid = session.get("user_id")
         user = get_current_user() if uid else None
 
-        # Logged-in users go to dashboard
+        # Logged-in users go to feed
         if user:
-            # Just redirect to the existing dashboard
-            try:
-                users_data = storage.load_users()
-                u = users_data.get(uid)
-                if u:
-                    return redirect(url_for("dashboard"))
-            except:
-                pass
+            return redirect(url_for("feed_page"))
 
         # ── Guest landing page ──
         s = _library_stats()

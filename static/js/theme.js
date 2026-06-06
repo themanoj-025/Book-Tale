@@ -1,121 +1,122 @@
-/* ═══════════════════════════════════════════════════════════════════
-   theme.js — BookTale Cinematic Theme Switcher
-   ═══════════════════════════════════════════════════════════════════ */
+/**
+ * theme.js — BookTale Theme Manager
+ * Handles light/dark/sepia theme toggle, persistence, and accessibility mode
+ */
 
-(function () {
+(function() {
   'use strict';
 
-  const STORAGE_KEY = 'bt-theme';
-  const HTML = document.documentElement;
-  const BLINK_DURATION = 300; // ms
+  const THEMES = ['light', 'dark', 'sepia'];
+  const THEME_KEY = 'booktale_theme';
+  const ACCESSIBLE_KEY = 'booktale_accessible';
 
-  // ── Detect initial theme ────────────────────────────────────────
-  function getInitialTheme() {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === 'dark' || stored === 'light') return stored;
-    // Respect system preference
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
-    }
-    return 'light';
+  function getSavedTheme() {
+    return localStorage.getItem(THEME_KEY) || 'light';
   }
 
-  // ── Apply theme ─────────────────────────────────────────────────
-  function applyTheme(theme, animate) {
-    HTML.setAttribute('data-theme', theme);
-    localStorage.setItem(STORAGE_KEY, theme);
-
-    // Update the toggle button icon
-    const btn = document.getElementById('btThemeToggle');
-    if (btn) {
-      const icon = btn.querySelector('i') || btn.querySelector('.theme-icon');
+  function setTheme(theme) {
+    if (!THEMES.includes(theme)) return;
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem(THEME_KEY, theme);
+    
+    // Update toggle button icon
+    const toggleBtn = document.querySelector('.theme-toggle');
+    if (toggleBtn) {
+      const icon = toggleBtn.querySelector('i');
       if (icon) {
-        icon.className = theme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
+        const icons = { light: 'bi-moon-stars-fill', dark: 'bi-sun-fill', sepia: 'bi-book-half' };
+        icon.className = 'bi ' + (icons[theme] || 'bi-moon-stars-fill');
       }
-    }
-
-    // Dispatch event so other modules can react
-    document.dispatchEvent(new CustomEvent('bt-theme-changed', { detail: { theme } }));
-
-    // Cinematic blink effect
-    if (animate !== false) {
-      cinematicBlink(theme);
+      toggleBtn.setAttribute('aria-pressed', theme !== 'light' ? 'true' : 'false');
+      toggleBtn.setAttribute('aria-label', `Switch to ${THEMES[(THEMES.indexOf(theme) + 1) % 3]} mode`);
     }
   }
 
-  // ── Cinematic Blink ─────────────────────────────────────────────
-  let blinkOverlay = null;
-
-  function cinematicBlink(theme, intensity) {
-    intensity = intensity || 0.15;
-
-    if (!blinkOverlay) {
-      blinkOverlay = document.createElement('div');
-      blinkOverlay.id = 'bt-blink-overlay';
-      blinkOverlay.style.cssText =
-        'position:fixed;inset:0;z-index:99999;pointer-events:none;' +
-        'background:#000;opacity:0;transition:opacity ' + (BLINK_DURATION / 2) + 'ms ease;';
-      document.body.appendChild(blinkOverlay);
-    }
-
-    // Flash it
-    blinkOverlay.style.transition = 'none';
-    blinkOverlay.style.opacity = '0';
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        blinkOverlay.style.transition = 'opacity ' + (BLINK_DURATION / 4) + 'ms ease';
-        blinkOverlay.style.opacity = String(intensity);
-        setTimeout(() => {
-          blinkOverlay.style.transition = 'opacity ' + (BLINK_DURATION / 2) + 'ms ease';
-          blinkOverlay.style.opacity = '0';
-        }, BLINK_DURATION / 3);
-      });
-    });
+  function cycleTheme() {
+    const current = getSavedTheme();
+    const next = THEMES[(THEMES.indexOf(current) + 1) % 3];
+    setTheme(next);
   }
 
-  // ── Toggle ──────────────────────────────────────────────────────
-  function toggleTheme() {
-    const current = HTML.getAttribute('data-theme') || 'light';
-    const next = current === 'dark' ? 'light' : 'dark';
-    applyTheme(next, true);
-  }
-
-  // ── Init ────────────────────────────────────────────────────────
-  function init() {
-    // Apply saved/system theme
-    const theme = getInitialTheme();
-    applyTheme(theme, false);
-
-    // Listen for toggle button clicks
-    document.addEventListener('click', function (e) {
-      const btn = e.target.closest('#btThemeToggle');
+  function setAccessible(enabled) {
+    const btn = document.getElementById('accessibilityToggle');
+    if (enabled) {
+      document.documentElement.setAttribute('data-mode', 'accessible');
+      localStorage.setItem(ACCESSIBLE_KEY, 'true');
       if (btn) {
-        e.preventDefault();
-        toggleTheme();
+        btn.classList.add('active');
+        btn.setAttribute('aria-pressed', 'true');
+        btn.setAttribute('aria-label', 'Disable accessibility mode');
       }
-    });
+    } else {
+      document.documentElement.removeAttribute('data-mode');
+      localStorage.setItem(ACCESSIBLE_KEY, 'false');
+      if (btn) {
+        btn.classList.remove('active');
+        btn.setAttribute('aria-pressed', 'false');
+        btn.setAttribute('aria-label', 'Toggle accessibility mode (OpenDyslexic font, high contrast, reduced motion)');
+      }
+    }
+    // Dispatch custom event so other modules can react
+    document.dispatchEvent(new CustomEvent('accessibilityChanged', { detail: { enabled } }));
+  }
 
-    // Listen for system color scheme changes
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    if (mq.addEventListener) {
-      mq.addEventListener('change', function (e) {
-        // Only auto-switch if user hasn't manually set a preference
-        if (!localStorage.getItem(STORAGE_KEY)) {
-          applyTheme(e.matches ? 'dark' : 'light', true);
-        }
-      });
+  function toggleAccessible() {
+    const current = localStorage.getItem(ACCESSIBLE_KEY) === 'true';
+    setAccessible(!current);
+    if (typeof window.showToast === 'function') {
+      window.showToast(!current ? '♿ Accessibility mode enabled' : 'Accessibility mode disabled', 'info');
     }
   }
 
-  // ── Expose ──────────────────────────────────────────────────────
-  window.BookTale = window.BookTale || {};
-  window.BookTale.theme = { toggle: toggleTheme, apply: applyTheme, getInitialTheme: getInitialTheme };
+  function init() {
+    // Restore saved theme
+    const savedTheme = getSavedTheme();
+    setTheme(savedTheme);
 
-  // Run on DOM ready
+    // Restore accessibility mode
+    const accessible = localStorage.getItem(ACCESSIBLE_KEY) === 'true';
+    if (accessible) {
+      setAccessible(true);
+    }
+
+    // Wire up theme toggle button
+    const toggleBtn = document.querySelector('.theme-toggle');
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        // Cycle: light → dark → sepia → light
+        const current = getSavedTheme();
+        const next = THEMES[(THEMES.indexOf(current) + 1) % 3];
+        setTheme(next);
+      });
+    }
+
+    // Wire up accessibility toggle button
+    const accBtn = document.getElementById('accessibilityToggle');
+    if (accBtn) {
+      accBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        toggleAccessible();
+      });
+    }
+
+    // Listen for system preference changes
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    mq.addEventListener('change', function(e) {
+      // Only auto-switch if user hasn't set a preference
+      if (!localStorage.getItem(THEME_KEY)) {
+        setTheme(e.matches ? 'dark' : 'light');
+      }
+    });
+  }
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
   }
 
+  // Export for use in inline scripts
+  window.booktaleTheme = { setTheme, cycleTheme, getSavedTheme, setAccessible, toggleAccessible };
 })();
