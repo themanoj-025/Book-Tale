@@ -9,8 +9,10 @@
 [![Socket.IO](https://img.shields.io/badge/Socket.IO-5.0+-gray?style=flat&logo=socket.io)](https://flask-socketio.readthedocs.io)
 [![PWA](https://img.shields.io/badge/PWA-Enabled-5A0FC8?style=flat&logo=pwa&logoColor=white)]()
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat)]()
+[![CI](https://img.shields.io/github/actions/workflow/status/themanoj-025/Book-Tale/ci.yml?branch=main&label=CI&logo=github&style=flat)](https://github.com/themanoj-025/Book-Tale/actions/workflows/ci.yml)
 [![Tests](https://img.shields.io/badge/tests-53%20passing-brightgreen?style=flat)]()
 [![Code style](https://img.shields.io/badge/code%20style-black-000000?style=flat)]()
+[![Dependabot](https://img.shields.io/badge/dependabot-enabled-025E8C?logo=dependabot&style=flat)](https://github.com/themanoj-025/Book-Tale/security/dependabot)
 
 **CLI Mode** — Rich terminal interface with 60+ features  
 **Web Mode** — BookTale cinematic design with dark mode + REST API  
