@@ -301,7 +301,9 @@ class Communities:
                 try:
                     if datetime.fromisoformat(p.get("expires_at", "2099-01-01")) < now:
                         p["is_active"] = False
-                except: pass
+                except Exception:
+
+                    pass
         club_polls.sort(key=lambda p: p["created_at"], reverse=True)
         users = self.storage.load_users()
         enriched = []

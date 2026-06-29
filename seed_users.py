@@ -395,7 +395,7 @@ def main():
     print(f"     Active:       {statuses.get('Active', 0)}")
     print(f"     Expired:      {statuses.get('Expired', 0)}")
     print(f"     Blocked:      {statuses.get('Blocked', 0)}")
-    print(f"\n  🔑 Default password for all seed users: password123")
+    # print(f"\n  🔑 Default password for all seed users: password123")  # Redacted for security
     print(f"  💡 Admin login: ADMIN001 / admin123 (if you have the default admin)")
     print("=" * 60)
 

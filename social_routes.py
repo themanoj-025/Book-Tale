@@ -248,7 +248,9 @@ def init_social_routes(app, _storage, _lib, _auth, _social, _review_mgr, _recomm
             rt.emit_new_post(enriched)
         try:
             if gamification: gamification.on_post_created(uid)
-        except: pass
+        except Exception:
+
+            pass
         return jsonify({"success": True, "post": post})
 
     @app.route("/api/upload", methods=["POST"])
@@ -338,7 +340,9 @@ def init_social_routes(app, _storage, _lib, _auth, _social, _review_mgr, _recomm
                         rt.emit_notification(post["user_id"], {"type":"comment","message":"%s commented on your post" % (uu.name if uu else uid),"post_id":post_id})
                 try:
                     if gamification: gamification.on_comment_created(uid)
-                except: pass
+                except Exception:
+
+                    pass
                 return jsonify({"success": True, "comment": comment, "message": msg})
             return jsonify({"success": False, "error": msg})
 
@@ -1065,23 +1069,31 @@ document.addEventListener("DOMContentLoaded", function(){
                 gd = gamification.get_user_gamification(user_id)
                 badges = gd.get("achievements",[]); gm_lev = gd.get("level","New Reader")
                 gm_pts = gd.get("points",0); gm_stk = gd.get("streak_days",0)
-            except: pass
+            except Exception:
+
+                pass
         # Diary
         de = []; dtot = 0
         try:
             from diary import DiaryManager
             de, dtot = DiaryManager(storage).get_user_diary(user_id, page=1, per_page=5)
-        except: pass
+        except Exception:
+
+            pass
         # Challenge
         cd = {}
         try:
             from reading_challenge import ReadingChallenge
             cd = ReadingChallenge(storage).get_goal(user_id, datetime.now().year)
-        except: pass
+        except Exception:
+
+            pass
         ds = {}
         try:
             ds = DiaryManager(storage).get_stats(user_id)
-        except: pass
+        except Exception:
+
+            pass
         favs = getattr(pu, "favorite_books", [])
         shelves = review_mgr.get_user_shelf(user_id)
         sc = review_mgr.get_shelf_counts(user_id)
@@ -1112,7 +1124,9 @@ document.addEventListener("DOMContentLoaded", function(){
             he = []
             try:
                 with open(hm_path, "r", encoding="utf-8") as f: he = json.load(f)
-            except: pass
+            except Exception:
+
+                pass
             from datetime import date as d2
             td = d2.today(); hmd = {}
             for i in range(365): hmd[(td - timedelta(days=i)).isoformat()] = 0

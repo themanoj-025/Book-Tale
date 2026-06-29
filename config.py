@@ -77,10 +77,14 @@ class Config:
                         setattr(Config, _key, str(_val).lower() == "true")
                     elif _attr_type == int:
                         try: setattr(Config, _key, int(_val))
-                        except: pass
+                        except Exception:
+
+                            pass
                     elif _attr_type == float:
                         try: setattr(Config, _key, float(_val))
-                        except: pass
+                        except Exception:
+
+                            pass
                     elif _attr_type == set:
                         setattr(Config, _key, set(str(_val).split(",")) if isinstance(_val, str) else _val)
                     else:

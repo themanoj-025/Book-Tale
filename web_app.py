@@ -1550,6 +1550,5 @@ def admin_fines_page():
 if __name__ == "__main__":
     print(f"  📚 Library Management System — Web Interface")
     print(f"  🌐 http://{Config.FLASK_HOST}:{Config.FLASK_PORT}")
-    print(f"  🔐 Default login: {Config.DEFAULT_ADMIN_ID} / {Config.DEFAULT_ADMIN_PASSWORD}")
     print(f"  ⌨️  Press Ctrl+K to search books from anywhere")
     socketio.run(app, host=Config.FLASK_HOST, port=Config.FLASK_PORT, debug=Config.FLASK_DEBUG, allow_unsafe_werkzeug=True)

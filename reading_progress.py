@@ -281,7 +281,9 @@ class ReadingProgress:
                     updated = datetime.fromisoformat(entry.get("updated_at", ""))
                     month_key = updated.strftime("%Y-%m")
                     pages_by_month[month_key] = pages_by_month.get(month_key, 0) + current
-                except: pass
+                except Exception:
+
+                    pass
 
         return {
             "total_time_spent_minutes": total_time,

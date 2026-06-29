@@ -791,7 +791,9 @@ def init_new_features_routes(app, storage, lib, auth, notif_mgr,
         # Also update reading challenge
         try:
             _challenge.set_goal(uid, datetime.now().year, _challenge.get_goal(uid, datetime.now().year).get("goal", 0))
-        except: pass
+        except Exception:
+
+            pass
         return jsonify({"success": ok, "message": msg, "progress": progress})
 
     @app.route("/api/reading-progress/<book_id>")
@@ -1042,7 +1044,9 @@ def init_new_features_routes(app, storage, lib, auth, notif_mgr,
             from gamification import Gamification
             g = Gamification(_storage)
             g.add_points(uid, 5, "Suggested a book")
-        except: pass
+        except Exception:
+
+            pass
         return jsonify({"success": ok, "message": msg, "suggestion": suggestion})
 
     @app.route("/api/wishlist/<suggestion_id>/vote", methods=["POST"])

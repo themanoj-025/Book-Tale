@@ -184,7 +184,9 @@ class Gamification:
         try:
             with open(clubs_file, 'r', encoding='utf-8') as f:
                 clubs = json.load(f)
-        except: pass
+        except Exception:
+
+            pass
         user_clubs = [c for c in clubs if user_id in c.get("members", [])]
 
         lists_file = os.path.join(Config.DATA_DIR, "book_lists.json")
@@ -193,7 +195,9 @@ class Gamification:
             with open(lists_file, 'r', encoding='utf-8') as f:
                 all_lists = json.load(f)
             user_lists = [l for l in all_lists if l["owner_id"] == user_id]
-        except: pass
+        except Exception:
+
+            pass
 
         polls_file = os.path.join(Config.DATA_DIR, "polls.json")
         user_polls = []
@@ -201,7 +205,9 @@ class Gamification:
             with open(polls_file, 'r', encoding='utf-8') as f:
                 all_polls = json.load(f)
             user_polls = [p for p in all_polls if p["user_id"] == user_id]
-        except: pass
+        except Exception:
+
+            pass
 
         streak_days = ud.get("streak_days", 0)
 
